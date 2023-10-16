@@ -1,0 +1,108 @@
+openapi: 3.0.0
+info:
+    title: Получение карточек
+paths:
+    /api/cards:
+        get:
+            summary: Получение карточек
+            description: Получение всех карточек
+            responses:
+                '200':
+                    description: Успешное получение всех карточек
+                '500':
+                    description: Ошибка на сервере
+        post:
+            summary: Создание новой карточки
+            description: Создание новой карточки
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/CardInput'
+            responses:
+                '201':
+                    description: Успешное создание карточки
+                '400':
+                    description: Bad Request (Validation failed)
+                '500':
+                    description: Ошибка на сервере
+components:
+    schemas:
+        CardInput:
+            type: object
+            properties:
+                title:
+                    type: string
+                    description: The title of the card (required)
+                date:
+                    type: string
+                    format: date
+                    description: The date of the card
+                description:
+                    type: string
+                    description: The description of the card
+                checkboxes:
+                    type: array
+                    items:
+                        type: object
+                        properties:
+                            title:
+                                type: string
+                                description: The title of the checkbox
+                            isActive:
+                                type: boolean
+                                description: The status of the checkbox
+                    description: An array of checkboxes
+                kubsauInfo:
+                    type: object
+                    properties:
+                        id:
+                            type: string
+                            description: The ID of the kubsau info
+                        subject:
+                            type: string
+                            description: The subject of the kubsau info
+                        group:
+                            type: string
+                            description: The group of the kubsau info
+                        auditorium:
+                            type: string
+                            description: The auditorium of the kubsau info
+                        teacher:
+                            type: string
+                            description: The teacher of the kubsau info
+            required:
+                - title
+
+        Card:
+            allOf:
+                - $ref: '#/components/schemas/CardInput'
+                - type: object
+                  properties:
+                    _id:
+                        type: string
+                        description: The unique identifier of the card
+
+        ValidationErrors:
+            type: object
+            properties:
+                errors:
+                    type: array
+                    items:
+                        type: object
+                        properties:
+                            value:
+                                type: string
+                        msg:
+                            type: string
+                        param:
+                            type: string
+                    description: Validation error details
+
+        Error:
+            type: object
+            properties:
+                message:
+                    type: string
+                    description: Error message

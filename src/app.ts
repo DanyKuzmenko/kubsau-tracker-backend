@@ -1,11 +1,13 @@
 import express from 'express';
-import mongoose from 'mongoose'
+import mongoose from 'mongoose';
 import cardRoutes from './routes/cardRoutes';
+import { swaggerSpec } from './swagger';
+import swaggerUi from 'swagger-ui-express';
 
 const app = express();
 
 const ENV_PATH = process.env.NODE_ENV === 'production' ? '.env.production' : '.env.development';
-require('dotenv').config({ path: ENV_PATH })
+require('dotenv').config({ path: ENV_PATH });
 
 
 const DB_URL = process.env.MONGODB_URI;
@@ -24,9 +26,11 @@ if (DB_URL) {
   console.error('MONGODB_URI environment variable is not defined');
 }
 
-app.use(express.json())
+app.use(express.json());
 
-app.use('/api', cardRoutes)
+app.use('/api', cardRoutes);
+
+app.use('/api', swaggerUi.serve, swaggerUi.setup(swaggerSpec))
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
