@@ -1,7 +1,11 @@
 import { Request, Response, NextFunction } from 'express';
-import cardSchema from '../schemas/card';
+import * as yup from 'yup'
 
-export const validateCard = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const validateCard = (cardSchema:  yup.ObjectSchema<any>) => async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
   try {
     await cardSchema.validate(req.body, { abortEarly: false });
     next();

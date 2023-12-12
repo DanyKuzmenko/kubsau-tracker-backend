@@ -3,12 +3,19 @@ import mongoose from 'mongoose';
 import cardRoutes from './routes/cardRoutes';
 import { swaggerSpec } from './swagger';
 import swaggerUi from 'swagger-ui-express';
+import cors from 'cors';
 
 const app = express();
 
-const ENV_PATH = process.env.NODE_ENV === 'production' ? '.env.production' : '.env.development';
-require('dotenv').config({ path: ENV_PATH });
+app.use(cors({
+  origin: ["http://localhost:3000", "http://localhost:3001"]
+}))
 
+const ENV_PATH =
+  process.env.NODE_ENV === 'production'
+    ? '.env.production'
+    : '.env.development';
+require('dotenv').config({ path: ENV_PATH });
 
 const DB_URL = process.env.MONGODB_URI;
 const PORT = process.env.PORT || 3000;
@@ -30,7 +37,7 @@ app.use(express.json());
 
 app.use('/api', cardRoutes);
 
-app.use('/api', swaggerUi.serve, swaggerUi.setup(swaggerSpec))
+app.use('/api', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

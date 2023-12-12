@@ -1,4 +1,4 @@
-import swaggerJSDoc from 'swagger-jsdoc'
+import swaggerJSDoc from 'swagger-jsdoc';
 
 const options = {
   swaggerDefinition: {
@@ -17,10 +17,7 @@ const options = {
       },
     ],
   },
-  apis: [
-    './src/routes/*.ts',
-    './src/routes/swagger/*.yaml',
-  ],
+  apis: ['./src/routes/*.ts', './src/routes/swagger/*.yaml'],
 };
 
 const swaggerSpec = swaggerJSDoc(options);
