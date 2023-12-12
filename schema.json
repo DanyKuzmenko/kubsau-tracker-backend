@@ -1,0 +1,40 @@
+{
+  "Tasks End Point": [
+    {
+      "id": "string",
+      "date": "string",
+      "tasks": [
+        {
+          "id": "string",
+          "subject": "string",
+          "teacher": "string",
+          "isDone": "boolean",
+          "deadline": "string",
+          "description": "string",
+          "checkboxes": [
+            {
+              "id": "string",
+              "title": "string",
+              "isDone": "boolean"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "Schedule End Point": [
+    {
+      "id": "string",
+      "date": "string",
+      "lessons": [
+        {
+          "number": "number",
+          "subject": "string",
+          "group": "string",
+          "auditorium": "string",
+          "teacher": "string"
+        }
+      ]
+    }
+  ]
+}
