@@ -1,9 +1,11 @@
 import express from 'express';
 import mongoose from 'mongoose';
-import cardRoutes from './routes/cardRoutes';
+import tasksRoutes from './routes/tasksRoutes';
 import { swaggerSpec } from './swagger';
 import swaggerUi from 'swagger-ui-express';
 import cors from 'cors';
+import { errorHandler } from './middleware/errorHandling';
+import { errorLogger, requestLogger } from './middleware/logger';
 
 const app = express();
 
@@ -35,8 +37,19 @@ if (DB_URL) {
 
 app.use(express.json());
 
-app.use('/api', cardRoutes);
+// request logger
+app.use(requestLogger)
 
+// routes
+app.use('/api', tasksRoutes);
+
+// error logger
+app.use(errorLogger)
+
+// error handler boom
+app.use(errorHandler);
+
+// swagger
 app.use('/api', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.listen(PORT, () => {

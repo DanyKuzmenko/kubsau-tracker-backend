@@ -3,3 +3,6 @@ dist
 
 #webstorm
 .idea
+
+#logs
+*.log
