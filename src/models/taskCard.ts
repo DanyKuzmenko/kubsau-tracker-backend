@@ -3,7 +3,7 @@ import { ITask } from './tasks';
 
 export interface ITaskCard extends Document {
   date: Date;
-  tasks: ITask[] | [];
+  tasks: ITask[];
 }
 
 const TaskCardSchema = new Schema<ITaskCard>({
