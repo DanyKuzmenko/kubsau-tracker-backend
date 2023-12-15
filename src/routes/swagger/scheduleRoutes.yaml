@@ -1,0 +1,107 @@
+swagger: '2.0'
+info:
+  title: Schedule API
+  version: 1.0.0
+paths:
+  /api/schedule/{groupID}:
+    get:
+      summary: Получить расписание группы по ID
+      description: Получает расписание для указанной группы по ее ID
+      parameters:
+        - name: groupID
+          in: path
+          description: ID группы
+          required: true
+          type: string
+      responses:
+        200:
+          description: Успешный запрос. Возвращает расписание группы
+          schema:
+            $ref: '#/definitions/ScheduleResponse'
+        400:
+          description: Некорректный запрос
+        404:
+          description: Расписание для указанной группы не найдено
+
+definitions:
+  Teacher:
+    type: object
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      link:
+        type: string
+      isOnline:
+        type: boolean
+      online:
+        type: string
+      room:
+        type: string
+
+  Lesson:
+    type: object
+    properties:
+      name:
+        type: string
+      type:
+        type: string
+      teachers:
+        type: array
+        items:
+          $ref: '#/definitions/Teacher'
+
+  ClassInfo:
+    type: object
+    properties:
+      number:
+        type: integer
+      start:
+        type: string
+      finish:
+        type: string
+      lessons:
+        type: array
+        items:
+          $ref: '#/definitions/Lesson'
+
+  DayInfo:
+    type: object
+    properties:
+      number:
+        type: integer
+      date:
+        type: string
+      classes:
+        type: array
+        items:
+          $ref: '#/definitions/ClassInfo'
+
+  WeekInfo:
+    type: object
+    properties:
+      number:
+        type: integer
+      days:
+        type: array
+        items:
+          $ref: '#/definitions/DayInfo'
+
+  ScheduleResponse:
+    type: object
+    properties:
+      id:
+        type: string
+      type:
+        type: string
+      name:
+        type: string
+      lastRefresh:
+        type: string
+      currentWeek:
+        type: integer
+      weeks:
+        type: array
+        items:
+          $ref: '#/definitions/WeekInfo'
