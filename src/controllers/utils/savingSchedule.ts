@@ -3,31 +3,32 @@ import {
   LessonModel,
   ClassModel,
   DayModel, WeekModel,
-  ScheduleModel, ILesson
+  ScheduleModel
 } from '../../models/schedule';
 import mongoose from 'mongoose';
 import { fetchScheduleFromUniversityAPI } from './universityAPI';
 
 export const saveScheduleToDB = async (scheduleData: ISchedule) => {
   try {
-    // Создание и сохранение всех Lesson
-    const lessonsPromises = scheduleData.weeks.flatMap((week) =>
-      week.days.flatMap((day) =>
-        day.classes.flatMap((classInfo) => classInfo.lessons.map((lesson) =>
-          LessonModel.create({ _id: new mongoose.Types.ObjectId(), ...lesson })))
-      )
-    );
-
-    const createdLessons = await Promise.all(lessonsPromises);
-    const lessonIds = createdLessons.map((lesson) => lesson._id);
-
     // Создание и сохранение всех Class, Day и Week
     const weeksPromises = scheduleData.weeks.map(async (week) => {
       const daysPromises = await Promise.all(
         week.days.map(async (day) => {
           const classPromises = await Promise.all(
             day.classes.map(async (classInfo) => {
-              const lessonRefs = createLessonRefs(lessonIds, classInfo.lessons);
+              const uniqueLessons = classInfo.lessons.map((lesson) => ({
+                _id: new mongoose.Types.ObjectId(),
+                ...lesson,
+              }));
+
+              const createdLessons = await LessonModel.create(uniqueLessons);
+
+              const lessonRefs = createdLessons.map((lesson) => ({
+                _id: lesson._id,
+                name: lesson.name,
+                type: lesson.type,
+                teachers: lesson.teachers,
+              }));
 
               return await ClassModel.create({
                 _id: new mongoose.Types.ObjectId(),
@@ -67,18 +68,6 @@ export const saveScheduleToDB = async (scheduleData: ISchedule) => {
   }
 };
 
-const createLessonRefs = (lessonIds: mongoose.Types.ObjectId[], lessons: ILesson[]) => {
-  return lessons.map((lesson, index) => {
-    if (!lesson) {
-      return []; // Возвращает пустой массив, если урок не заполнен
-    }
-    return {
-      ...lesson,
-      _id: lessonIds[index],
-    };
-  });
-};
-
 export const fetchAndSaveNewSchedule = async (groupID: string): Promise<ISchedule | null> => {
   try {
     const schedule = await fetchScheduleFromUniversityAPI({ groupID });
@@ -96,6 +85,7 @@ export const fetchAndSaveNewSchedule = async (groupID: string): Promise<ISchedul
         }
       }
     }).exec();
+
   } catch (error) {
     console.error('Error fetching and saving schedule:', error);
     return null;
