@@ -1,0 +1,31 @@
+openapi: 3.0.0
+info:
+  title: Schedule API
+  version: 1.0.0
+
+paths:
+  /groups:
+    get:
+      summary: Получить группы из КубГАУ
+      responses:
+        '200':
+          description: Список групп
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Groups'
+
+components:
+  schemas:
+    Groups:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: ID группы
+        name:
+          type: string
+          description: Наименование группы

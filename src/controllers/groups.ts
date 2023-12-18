@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import { handleErrorValidation } from './utils/errorFunctions';
 import { fetchGroupsFromUniversityAPI } from './utils/universityAPI';
+import { sortByName } from './utils/additionalFunctions';
 
 const Controller = {
   getGroups: async (
@@ -15,7 +16,9 @@ const Controller = {
         throw new Error('Groups is empty');
       }
 
-      res.status(200).json(groups);
+      res
+        .status(200)
+        .json(groups.groups.sort((a: any, b: any) => sortByName(a, b)));
     } catch (err: any) {
       handleErrorValidation(err, next);
     }
