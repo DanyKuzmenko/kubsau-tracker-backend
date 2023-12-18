@@ -263,16 +263,16 @@ components:
           type: boolean
           description: Указывает, выполнено ли задание
         deadline:
-           type: string
-           format: date-time
-           description: Обновленный срок выполнения задания
+          type: string
+          format: date-time
+          description: Обновленный срок выполнения задания
         description:
-           type: string
-           description: Обновленное описание задания
+          type: string
+          description: Обновленное описание задания
         lessonId:
-           type: string
-           format: uuid
-           description: ID урока
+          type: string
+          format: uuid
+          description: ID урока
 
     CreateCheckboxRequest:
       type: object
@@ -318,11 +318,11 @@ components:
         - lessonId
 
     DeleteCheckboxRequest:
-          type: object
-          properties:
-            checkboxId:
-              type: string
-              format: uuid
-              description: ID урока
-          required:
-            - lessonId
+      type: object
+      properties:
+        checkboxId:
+          type: string
+          format: uuid
+          description: ID урока
+      required:
+        - lessonId

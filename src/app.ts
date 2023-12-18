@@ -2,6 +2,7 @@ import express from 'express';
 import mongoose from 'mongoose';
 import tasksRoutes from './routes/tasksRoutes';
 import scheduleRoutes from './routes/scheduleRoutes';
+import groupRoutes from './routes/groups';
 import { swaggerSpec } from './swagger/swaggerInitialization';
 import swaggerUi from 'swagger-ui-express';
 import cors from 'cors';
@@ -46,6 +47,7 @@ app.use(requestLogger);
 // routes
 app.use('/api', tasksRoutes);
 app.use('/api', scheduleRoutes);
+app.use('/api', groupRoutes);
 
 // error logger
 app.use(errorLogger);

@@ -109,18 +109,16 @@ const Controller = {
         });
 
         await newTaskCard.save();
-        res.status(201).json(newTaskCard);
+        res.status(201).json(createdTask);
       } else {
         const existingTask = taskCard.tasks.find(
           (item: any) => item.lessonId.toString() === task.lessonId,
         );
 
         if (existingTask) {
-          res
-            .status(400)
-            .json({
-              message: 'Task for this lesson already exists for this date.',
-            });
+          res.status(400).json({
+            message: 'Task for this lesson already exists for this date.',
+          });
         } else {
           const createdTask = await createTask(task);
 
