@@ -6,9 +6,9 @@ export interface ICheckbox extends Document {
 }
 
 export const CheckboxSchema = new Schema<ICheckbox>({
-  title: {type: String, required: true},
-  isDone: {type: Boolean, required: true},
-})
+  title: { type: String, required: true },
+  isDone: { type: Boolean, required: true },
+});
 
 CheckboxSchema.pre<ICheckbox>('save', function (next) {
   if (!this._id) {

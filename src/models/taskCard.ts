@@ -7,7 +7,7 @@ export interface ITaskCard extends Document {
 }
 
 const TaskCardSchema = new Schema<ITaskCard>({
-  date: {type: String, required: true},
+  date: { type: String, required: true },
   tasks: [{ type: Schema.Types.ObjectId, ref: 'Task' }],
 });
 

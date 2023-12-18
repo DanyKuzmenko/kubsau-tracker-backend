@@ -17,6 +17,7 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/TaskCard'
+
     post:
       summary: Создание новой карточки заданий
       requestBody:
@@ -27,7 +28,7 @@ paths:
               $ref: '#/components/schemas/CreateTaskCardRequest'
       responses:
         '201':
-          description: The created task card
+          description: Созданная карточка заданий
           content:
             application/json:
               schema:
@@ -40,19 +41,19 @@ paths:
         - in: path
           name: lessonId
           required: true
-          description: The ID of the lesson
+          description: ID урока
           schema:
             type: string
             format: uuid
       responses:
         '200':
-          description: A task for the provided lesson ID
+          description: Задание для предоставленного lessonId
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Task'
         '404':
-          description: Task not found for the provided lesson ID
+          description: Задание не найдено для предоставленного lessonId
 
     patch:
       summary: Обновление карточки задания по lessonId
@@ -60,7 +61,7 @@ paths:
         - in: path
           name: lessonId
           required: true
-          description: The ID of the lesson
+          description: ID урока
           schema:
             type: string
             format: uuid
@@ -72,13 +73,35 @@ paths:
               $ref: '#/components/schemas/UpdateTaskRequest'
       responses:
         '200':
-          description: The updated task
+          description: Обновленное задание
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Task'
         '404':
-          description: Task not found for the provided lesson ID
+          description: Задание не найдено для предоставленного lessonId
+
+    delete:
+      summary: Удаление задания по lessonId
+      parameters:
+        - in: path
+          name: lessonId
+          required: true
+          description: ID урока
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeleteTaskRequest'
+      responses:
+        '200':
+          description: Задание успешно удалено
+        '404':
+          description: Задание не найдено для предоставленного lessonId
 
   /tasks/checkbox:
     post:
@@ -91,7 +114,7 @@ paths:
               $ref: '#/components/schemas/CreateCheckboxRequest'
       responses:
         '201':
-          description: The created checkbox
+          description: Созданный чекбокс
           content:
             application/json:
               schema:
@@ -104,7 +127,7 @@ paths:
         - in: path
           name: checkboxId
           required: true
-          description: The ID of the checkbox
+          description: ID чекбокса
           schema:
             type: string
             format: uuid
@@ -116,11 +139,32 @@ paths:
               $ref: '#/components/schemas/UpdateCheckboxRequest'
       responses:
         '200':
-          description: The updated checkbox
+          description: Обновленный чекбокс
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Checkbox'
+    delete:
+      summary: Удаление чекбокса по checkboxId
+      parameters:
+        - in: path
+          name: checkboxId
+          required: true
+          description: ID чекбокса
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeleteCheckboxRequest'
+      responses:
+        '200':
+          description: Чекбокс успешно удален
+        '404':
+          description: Чекбокс не найден для предоставленного checkboxId
 
 components:
   schemas:
@@ -130,11 +174,11 @@ components:
         _id:
           type: string
           format: uuid
-          description: The unique identifier of the task card
+          description: Уникальный идентификатор карточки задания
         date:
           type: string
           format: date
-          description: The date of the task card
+          description: Дата карточки задания
         tasks:
           type: array
           items:
@@ -146,26 +190,26 @@ components:
         _id:
           type: string
           format: uuid
-          description: The unique identifier of the task
+          description: Уникальный идентификатор задания
         title:
           type: string
-          description: The title of the task
+          description: Название задания
         subject:
           type: string
-          description: The subject of the task
+          description: Предмет задания
         teacher:
           type: string
-          description: The teacher of the task
+          description: Преподаватель задания
         isDone:
           type: boolean
-          description: Indicates if the task is done
+          description: Указывает, выполнено ли задание
         deadline:
           type: string
           format: date-time
-          description: The deadline of the task
+          description: Срок выполнения задания
         description:
           type: string
-          description: The description of the task
+          description: Описание задания
         checkboxes:
           type: array
           items:
@@ -173,7 +217,7 @@ components:
         lessonId:
           type: string
           format: uuid
-          description: The ID of the lesson
+          description: ID урока
 
     Checkbox:
       type: object
@@ -181,13 +225,13 @@ components:
         _id:
           type: string
           format: uuid
-          description: The unique identifier of the checkbox
+          description: Уникальный идентификатор чекбокса
         title:
           type: string
-          description: The title of the checkbox
+          description: Название чекбокса
         isDone:
           type: boolean
-          description: Indicates if the checkbox is done
+          description: Указывает, выполнен ли чекбокс
 
     CreateTaskCardRequest:
       type: object
@@ -195,7 +239,7 @@ components:
         date:
           type: string
           format: date
-          description: The date of the task card
+          description: Дата карточки задания
         task:
           $ref: '#/components/schemas/Task'
       required:
@@ -208,41 +252,41 @@ components:
       properties:
         title:
           type: string
-          description: The updated title of the task
+          description: Обновленное название задания
         subject:
           type: string
-          description: The updated subject of the task
+          description: Обновленный предмет задания
         teacher:
           type: string
-          description: The updated teacher of the task
+          description: Обновленный преподаватель задания
         isDone:
           type: boolean
-          description: Indicates if the task is done
+          description: Указывает, выполнено ли задание
         deadline:
-          type: string
-          format: date-time
-          description: The updated deadline of the task
+           type: string
+           format: date-time
+           description: Обновленный срок выполнения задания
         description:
-          type: string
-          description: The updated description of the task
+           type: string
+           description: Обновленное описание задания
         lessonId:
-          type: string
-          format: uuid
-          description: The ID of the lesson
+           type: string
+           format: uuid
+           description: ID урока
 
     CreateCheckboxRequest:
       type: object
       properties:
         title:
           type: string
-          description: The title of the new checkbox
+          description: Название нового чекбокса
         isDone:
           type: boolean
-          description: Indicates if the new checkbox is done
+          description: Указывает, выполнен ли новый чекбокс
         lessonId:
           type: string
           format: uuid
-          description: The ID of the lesson
+          description: ID урока
       required:
         - title
         - isDone
@@ -253,10 +297,32 @@ components:
       properties:
         title:
           type: string
-          description: The updated title of the checkbox
+          description: Обновленное название чекбокса
         isDone:
           type: boolean
-          description: Indicates if the checkbox is done
+          description: Указывает, выполнен ли чекбокс
+
+    DeleteTaskRequest:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+          description: Дата задания, которое нужно удалить
+        lessonId:
+          type: string
+          format: uuid
+          description: ID урока
       required:
-        - title
-        - isDone
+        - date
+        - lessonId
+
+    DeleteCheckboxRequest:
+          type: object
+          properties:
+            checkboxId:
+              type: string
+              format: uuid
+              description: ID урока
+          required:
+            - lessonId

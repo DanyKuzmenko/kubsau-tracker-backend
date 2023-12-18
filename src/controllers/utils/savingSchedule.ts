@@ -2,8 +2,9 @@ import {
   ISchedule,
   LessonModel,
   ClassModel,
-  DayModel, WeekModel,
-  ScheduleModel
+  DayModel,
+  WeekModel,
+  ScheduleModel,
 } from '../../models/schedule';
 import mongoose from 'mongoose';
 import { fetchScheduleFromUniversityAPI } from './universityAPI';
@@ -33,23 +34,23 @@ export const saveScheduleToDB = async (scheduleData: ISchedule) => {
               return await ClassModel.create({
                 _id: new mongoose.Types.ObjectId(),
                 ...classInfo,
-                lessons: lessonRefs
+                lessons: lessonRefs,
               });
-            })
+            }),
           );
 
           return await DayModel.create({
             _id: new mongoose.Types.ObjectId(),
             ...day,
-            classes: classPromises
+            classes: classPromises,
           });
-        })
+        }),
       );
 
       return await WeekModel.create({
         _id: new mongoose.Types.ObjectId(),
         ...week,
-        days: daysPromises
+        days: daysPromises,
       });
     });
 
@@ -58,7 +59,7 @@ export const saveScheduleToDB = async (scheduleData: ISchedule) => {
 
     const scheduleToSave = {
       ...scheduleData,
-      weeks: createdWeeks
+      weeks: createdWeeks,
     };
 
     return await ScheduleModel.create(scheduleToSave);
@@ -68,24 +69,27 @@ export const saveScheduleToDB = async (scheduleData: ISchedule) => {
   }
 };
 
-export const fetchAndSaveNewSchedule = async (groupID: string): Promise<ISchedule | null> => {
+export const fetchAndSaveNewSchedule = async (
+  groupID: string,
+): Promise<ISchedule | null> => {
   try {
     const schedule = await fetchScheduleFromUniversityAPI({ groupID });
     await saveScheduleToDB(schedule);
-    return await ScheduleModel.findOne({ id: groupID }).populate({
-      path: 'weeks',
-      populate: {
-        path: 'days',
+    return await ScheduleModel.findOne({ id: groupID })
+      .populate({
+        path: 'weeks',
         populate: {
-          path: 'classes',
+          path: 'days',
           populate: {
-            path: 'lessons',
-            model: 'Lesson',
-          }
-        }
-      }
-    }).exec();
-
+            path: 'classes',
+            populate: {
+              path: 'lessons',
+              model: 'Lesson',
+            },
+          },
+        },
+      })
+      .exec();
   } catch (error) {
     console.error('Error fetching and saving schedule:', error);
     return null;

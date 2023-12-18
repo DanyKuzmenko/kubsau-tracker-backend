@@ -6,7 +6,8 @@
   "scripts": {
     "start": "nodemon src/app.ts",
     "build": "tsc",
-    "format": "npx prettier --write ."
+    "format": "npx prettier --write .",
+    "swagger": "node src/swagger/swaggerAutogen.js"
   },
   "author": "DanyKuzmenko",
   "license": "ISC",

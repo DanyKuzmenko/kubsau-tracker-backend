@@ -6,4 +6,4 @@ export const createTaskCardSchema = yup.object().shape({
   task: createTaskSchema.required(),
 });
 
-export const deleteTaskCardByDateSchema = yup.date().required()
+export const deleteTaskCardByDateSchema = yup.date().required();

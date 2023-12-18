@@ -5,23 +5,29 @@ import { ScheduleModel } from '../models/schedule';
 import moment from 'moment';
 
 const Controller = {
-  getSchedule: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  getSchedule: async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> => {
     try {
       const groupID = req.params.groupID;
 
-      const existingSchedule = await ScheduleModel.findOne({ id: groupID }).populate({
-        path: 'weeks',
-        populate: {
-          path: 'days',
+      const existingSchedule = await ScheduleModel.findOne({ id: groupID })
+        .populate({
+          path: 'weeks',
           populate: {
-            path: 'classes',
+            path: 'days',
             populate: {
-              path: 'lessons',
-              model: 'Lesson',
-            }
-          }
-        }
-      }).exec();
+              path: 'classes',
+              populate: {
+                path: 'lessons',
+                model: 'Lesson',
+              },
+            },
+          },
+        })
+        .exec();
 
       if (!existingSchedule) {
         // Если расписание не найдено, просто получаем новое и отдаем его
@@ -45,7 +51,7 @@ const Controller = {
     } catch (err: any) {
       handleErrorValidation(err, next);
     }
-  }
-}
+  },
+};
 
 export default Controller;

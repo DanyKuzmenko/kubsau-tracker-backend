@@ -43,33 +43,35 @@ export interface ISchedule extends Document {
 const lessonSchema = new mongoose.Schema<ILesson>({
   name: { type: String },
   type: { type: String },
-  teachers: [{
-    id: {type: String, required: true},
-    name: {type: String, required: true},
-    link: {type: String},
-    isOnline: {type: Boolean, required: true},
-    online: {type: String},
-    room: {type: String, required: true},
-  }]
-})
+  teachers: [
+    {
+      id: { type: String, required: true },
+      name: { type: String, required: true },
+      link: { type: String },
+      isOnline: { type: Boolean, required: true },
+      online: { type: String },
+      room: { type: String, required: true },
+    },
+  ],
+});
 
 const classSchema = new mongoose.Schema<IClassInfo>({
   number: { type: Number, required: true },
   start: { type: String, required: true },
   finish: { type: String, required: true },
-  lessons: [{ type: Schema.Types.ObjectId, ref: 'Lesson', required: false }]
-})
+  lessons: [{ type: Schema.Types.ObjectId, ref: 'Lesson', required: false }],
+});
 
 const daySchema = new mongoose.Schema<IDayInfo>({
   number: { type: Number, required: true },
   date: { type: String, required: true },
-  classes: [{ type: Schema.Types.ObjectId, ref: 'Class' }]
-})
+  classes: [{ type: Schema.Types.ObjectId, ref: 'Class' }],
+});
 
 const weekSchema = new mongoose.Schema<IWeekInfo>({
   number: { type: Number, required: true },
-  days: [{ type: Schema.Types.ObjectId, ref: 'Day' }]
-})
+  days: [{ type: Schema.Types.ObjectId, ref: 'Day' }],
+});
 
 const scheduleSchema = new Schema<ISchedule>({
   id: { type: String, required: true },
@@ -77,12 +79,14 @@ const scheduleSchema = new Schema<ISchedule>({
   name: { type: String, required: true },
   lastRefresh: { type: String, required: true },
   currentWeek: { type: Number, required: true },
-  weeks: [{ type: Schema.Types.ObjectId, ref: 'Week' }]
+  weeks: [{ type: Schema.Types.ObjectId, ref: 'Week' }],
 });
-
 
 export const LessonModel = mongoose.model<ILesson>('Lesson', lessonSchema);
 export const ClassModel = mongoose.model<IClassInfo>('Class', classSchema);
 export const DayModel = mongoose.model<IDayInfo>('Day', daySchema);
 export const WeekModel = mongoose.model<IWeekInfo>('Week', weekSchema);
-export const ScheduleModel = mongoose.model<ISchedule>('Schedule', scheduleSchema);
+export const ScheduleModel = mongoose.model<ISchedule>(
+  'Schedule',
+  scheduleSchema,
+);

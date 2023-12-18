@@ -2,7 +2,7 @@ import express from 'express';
 import mongoose from 'mongoose';
 import tasksRoutes from './routes/tasksRoutes';
 import scheduleRoutes from './routes/scheduleRoutes';
-import { swaggerSpec } from './swagger';
+import { swaggerSpec } from './swagger/swaggerInitialization';
 import swaggerUi from 'swagger-ui-express';
 import cors from 'cors';
 import { errorHandler } from './middleware/errorHandling';
@@ -10,9 +10,11 @@ import { errorLogger, requestLogger } from './middleware/logger';
 
 const app = express();
 
-app.use(cors({
-  origin: ["http://localhost:3000", "http://localhost:3001"]
-}))
+app.use(
+  cors({
+    origin: ['http://localhost:3000', 'http://localhost:3001'],
+  }),
+);
 
 const ENV_PATH =
   process.env.NODE_ENV === 'production'
@@ -39,14 +41,14 @@ if (DB_URL) {
 app.use(express.json());
 
 // request logger
-app.use(requestLogger)
+app.use(requestLogger);
 
 // routes
 app.use('/api', tasksRoutes);
 app.use('/api', scheduleRoutes);
 
 // error logger
-app.use(errorLogger)
+app.use(errorLogger);
 
 // error handler boom
 app.use(errorHandler);

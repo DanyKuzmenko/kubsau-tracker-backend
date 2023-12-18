@@ -1,77 +1,126 @@
 import { NextFunction, Request, Response } from 'express';
-import { createTaskSchema, updateTaskSchema } from '../schemas/task';
+import {
+  createTaskSchema,
+  teachersSchema,
+  updateTaskSchema,
+} from '../schemas/task';
 import { handleErrorValidation } from './utils/errorFunctions';
 import TaskCardModel from '../models/taskCard';
-import { createTaskCardSchema, deleteTaskCardByDateSchema } from '../schemas/taskCard';
+import {
+  createTaskCardSchema,
+  deleteTaskCardByDateSchema,
+} from '../schemas/taskCard';
 import { createTask } from './utils/savingTasks';
-import TaskModel, { ITask } from '../models/tasks';
+import TaskModel, { ITask, ITeachers } from '../models/tasks';
 import mongoose, { Types } from 'mongoose';
-import { createCheckboxSchema, id, updateCheckboxSchema } from '../schemas/common';
+import {
+  createCheckboxSchema,
+  dateSchema,
+  id,
+  updateCheckboxSchema,
+} from '../schemas/common';
 import CheckboxModel from '../models/common';
+import { ValidationError } from 'yup';
+import { sortByDate } from './utils/additionalFunctions';
 
 const Controller = {
-  getTaskCards: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  getTaskCards: async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> => {
     try {
       const tasks = await TaskCardModel.find().populate({
         path: 'tasks',
         populate: {
           path: 'checkboxes',
-          model: 'Checkbox'
-        }
+          model: 'Checkbox',
+        },
       });
-      res.status(200).json(tasks);
+
+      res.status(200).json(tasks.sort((a, b) => sortByDate(a, b)));
     } catch (err: any) {
       handleErrorValidation(err, next);
     }
   },
 
-  getTaskByLessonId: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  getTaskByLessonId: async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> => {
     try {
       const lessonId = req.params.lessonId;
 
       await id.validate(lessonId, { abortEarly: false });
 
-      const lessonObjectId = mongoose.Types.ObjectId.createFromHexString(lessonId);
+      const lessonObjectId =
+        mongoose.Types.ObjectId.createFromHexString(lessonId);
 
-      const task = await TaskModel.findOne({ lessonId: lessonObjectId }).populate('checkboxes');
+      const task = await TaskModel.findOne({
+        lessonId: lessonObjectId,
+      }).populate('checkboxes');
       res.status(200).json(task);
     } catch (err: any) {
       handleErrorValidation(err, next);
     }
   },
 
-  createTaskCard: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  createTaskCard: async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> => {
     try {
       const { date, task } = req.body;
 
       await createTaskCardSchema.validate(req.body, { abortEarly: false });
       await createTaskSchema.validate(task, { abortEarly: false });
+      await dateSchema.validate(date, { abortEarly: false });
 
-      const localeDate = new Date(date).toLocaleDateString('en')
+      if (task.teachers.length === 0) {
+        throw new ValidationError('Teachers is empty array');
+      }
 
-      let taskCard = await TaskCardModel.findOne({ localeDate }).populate({
-        path: 'tasks',
-        populate: {
-          path: 'checkboxes',
-          model: 'Checkbox'
-        }
-      });
+      await Promise.all(
+        task.teachers.map(async (teacher: ITeachers) => {
+          return await teachersSchema.validate(teacher, { abortEarly: false });
+        }),
+      );
+
+      const localeDate = new Date(date).toLocaleDateString('en');
+
+      let taskCard = await TaskCardModel.findOne({ date: localeDate }).populate(
+        {
+          path: 'tasks',
+          populate: {
+            path: 'checkboxes',
+            model: 'Checkbox',
+          },
+        },
+      );
 
       if (!taskCard) {
         const createdTask = await createTask(task);
 
         const newTaskCard = new TaskCardModel({
           date: localeDate,
-          tasks: [createdTask]
+          tasks: [createdTask],
         });
 
         await newTaskCard.save();
         res.status(201).json(newTaskCard);
       } else {
-        const existingTask = taskCard.tasks.find((item: any) => item.lessonId.toString() === task.lessonId);
+        const existingTask = taskCard.tasks.find(
+          (item: any) => item.lessonId.toString() === task.lessonId,
+        );
 
         if (existingTask) {
-          res.status(400).json({ message: 'Task for this lesson already exists for this date.' });
+          res
+            .status(400)
+            .json({
+              message: 'Task for this lesson already exists for this date.',
+            });
         } else {
           const createdTask = await createTask(task);
 
@@ -85,7 +134,11 @@ const Controller = {
     }
   },
 
-  updateCardByLessonId: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  updateCardByLessonId: async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> => {
     try {
       const lessonId = req.params.lessonId;
       const updateFields = req.body;
@@ -93,10 +146,22 @@ const Controller = {
       await updateTaskSchema.validate(updateFields, { abortEarly: false });
       await id.validate(lessonId, { abortEarly: false });
 
+      if (updateFields.teachers && updateFields.teachers.length === 0) {
+        throw new ValidationError('Teachers is empty array');
+      }
+
+      await Promise.all(
+        updateFields.teachers.map(async (teacher: ITeachers) => {
+          return await teachersSchema.validate(teacher, { abortEarly: false });
+        }),
+      );
+
       const task = await TaskModel.findOne({ lessonId }).populate('checkboxes');
 
       if (!task) {
-        res.status(404).json({ message: 'Task not found for the provided lessonId.' });
+        res
+          .status(404)
+          .json({ message: 'Task not found for the provided lessonId.' });
       } else {
         Object.assign(task, updateFields);
 
@@ -109,22 +174,31 @@ const Controller = {
     }
   },
 
-  createCheckbox: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  createCheckbox: async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> => {
     try {
       const { title, isDone, lessonId } = req.body;
 
       await createCheckboxSchema.validate(req.body, { abortEarly: false });
 
-      const lessonObjectId = mongoose.Types.ObjectId.createFromHexString(lessonId);
+      const lessonObjectId =
+        mongoose.Types.ObjectId.createFromHexString(lessonId);
 
-      const task = await TaskModel.findOne({ lessonId: lessonObjectId }).populate('checkboxes');
+      const task = await TaskModel.findOne({
+        lessonId: lessonObjectId,
+      }).populate('checkboxes');
 
       if (!task) {
-        res.status(404).json({ message: 'Task not found for the provided lessonId.' });
+        res
+          .status(404)
+          .json({ message: 'Task not found for the provided lessonId.' });
       } else {
         const createdCheckbox = await CheckboxModel.create({
           title: title,
-          isDone: isDone
+          isDone: isDone,
         });
 
         task.checkboxes.push(createdCheckbox);
@@ -138,7 +212,11 @@ const Controller = {
     }
   },
 
-  updateCheckboxById: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  updateCheckboxById: async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> => {
     try {
       const checkboxId = req.params.checkboxId;
       const updateFields = req.body;
@@ -149,7 +227,9 @@ const Controller = {
       const checkbox = await CheckboxModel.findById(checkboxId);
 
       if (!checkbox) {
-        res.status(404).json({ message: 'Checkbox not found for the provided checkboxId.' });
+        res
+          .status(404)
+          .json({ message: 'Checkbox not found for the provided checkboxId.' });
       } else {
         Object.assign(checkbox, updateFields);
 
@@ -162,33 +242,46 @@ const Controller = {
     }
   },
 
-  deleteTask: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  deleteTask: async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> => {
     try {
       const lessonId = req.params.lessonId;
       const { date } = req.body;
 
       await id.validate(lessonId, { abortEarly: false });
-      await deleteTaskCardByDateSchema.validate(date, { abortEarly: false })
+      await deleteTaskCardByDateSchema.validate(date, { abortEarly: false });
 
-      const lessonObjectId = mongoose.Types.ObjectId.createFromHexString(lessonId);
-      const localeDate = new Date(date).toLocaleDateString('en')
+      const lessonObjectId =
+        mongoose.Types.ObjectId.createFromHexString(lessonId);
+      const localeDate = new Date(date).toLocaleDateString('en');
 
-      const deletedTask = await TaskModel.findOneAndDelete({ lessonId: lessonObjectId });
+      const deletedTask = await TaskModel.findOneAndDelete({
+        lessonId: lessonObjectId,
+      });
 
       if (!deletedTask) {
-        res.status(404).json({ message: 'Task not found, try another lessonId' });
+        res
+          .status(404)
+          .json({ message: 'Task not found, try another lessonId' });
         return;
       }
 
-      const deletedTaskId = (deletedTask as unknown as ITask & {_id: Types.ObjectId})._id;
+      const deletedTaskId = (
+        deletedTask as unknown as ITask & { _id: Types.ObjectId }
+      )._id;
 
       const deletedFromTaskCard = await TaskCardModel.updateOne(
         { date: localeDate },
-        { $pull: { tasks: deletedTaskId } }
+        { $pull: { tasks: deletedTaskId } },
       );
 
       if (!deletedFromTaskCard) {
-        res.status(404).json({ message: 'Task card not found, try another lessonId' });
+        res
+          .status(404)
+          .json({ message: 'Task card not found, try another lessonId' });
         return;
       }
 
@@ -200,21 +293,31 @@ const Controller = {
       }
 
       if (remainingTasks.tasks.length === 0) {
-        const deletedTaskCard = await TaskCardModel.findOneAndDelete({ date: localeDate });
+        const deletedTaskCard = await TaskCardModel.findOneAndDelete({
+          date: localeDate,
+        });
 
         if (!deletedTaskCard) {
-          res.status(404).json({ message: 'Task card not found, try another lessonId' });
+          res
+            .status(404)
+            .json({ message: 'Task card not found, try another lessonId' });
           return;
         }
       }
 
-      res.status(200).json({ message: 'Task deleted successfully', deletedTask });
+      res
+        .status(200)
+        .json({ message: 'Task deleted successfully', deletedTask });
     } catch (err: any) {
       handleErrorValidation(err, next);
     }
   },
 
-  deleteCheckbox: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  deleteCheckbox: async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> => {
     try {
       const checkboxId = req.params.checkboxId;
 
@@ -223,14 +326,18 @@ const Controller = {
       const deletedCheckbox = await CheckboxModel.findByIdAndDelete(checkboxId);
 
       if (!deletedCheckbox) {
-        res.status(404).json({ message: 'Checkbox not found, try another checkboxId' });
+        res
+          .status(404)
+          .json({ message: 'Checkbox not found, try another checkboxId' });
       }
 
-      res.status(200).json({ message: 'Checkbox deleted successfully', deletedCheckbox });
+      res
+        .status(200)
+        .json({ message: 'Checkbox deleted successfully', deletedCheckbox });
     } catch (err: any) {
       handleErrorValidation(err, next);
     }
-  }
+  },
 };
 
 export default Controller;
