@@ -1,0 +1,262 @@
+openapi: 3.0.0
+info:
+  title: Task Management API
+  description: API for managing tasks
+  version: 1.0.0
+
+paths:
+  /tasks:
+    get:
+      summary: Получить все задания
+      responses:
+        '200':
+          description: Список заданий
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TaskCard'
+    post:
+      summary: Создание новой карточки заданий
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTaskCardRequest'
+      responses:
+        '201':
+          description: The created task card
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskCard'
+
+  /tasks/{lessonId}:
+    get:
+      summary: Получение карточки задания по lessonId
+      parameters:
+        - in: path
+          name: lessonId
+          required: true
+          description: The ID of the lesson
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: A task for the provided lesson ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '404':
+          description: Task not found for the provided lesson ID
+
+    patch:
+      summary: Обновление карточки задания по lessonId
+      parameters:
+        - in: path
+          name: lessonId
+          required: true
+          description: The ID of the lesson
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTaskRequest'
+      responses:
+        '200':
+          description: The updated task
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '404':
+          description: Task not found for the provided lesson ID
+
+  /tasks/checkbox:
+    post:
+      summary: Создание нового чекбокса
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCheckboxRequest'
+      responses:
+        '201':
+          description: The created checkbox
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+
+  /tasks/checkbox/{checkboxId}:
+    patch:
+      summary: Обновление чекбокса по checkboxId
+      parameters:
+        - in: path
+          name: checkboxId
+          required: true
+          description: The ID of the checkbox
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCheckboxRequest'
+      responses:
+        '200':
+          description: The updated checkbox
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Checkbox'
+
+components:
+  schemas:
+    TaskCard:
+      type: object
+      properties:
+        _id:
+          type: string
+          format: uuid
+          description: The unique identifier of the task card
+        date:
+          type: string
+          format: date
+          description: The date of the task card
+        tasks:
+          type: array
+          items:
+            $ref: '#/components/schemas/Task'
+
+    Task:
+      type: object
+      properties:
+        _id:
+          type: string
+          format: uuid
+          description: The unique identifier of the task
+        title:
+          type: string
+          description: The title of the task
+        subject:
+          type: string
+          description: The subject of the task
+        teacher:
+          type: string
+          description: The teacher of the task
+        isDone:
+          type: boolean
+          description: Indicates if the task is done
+        deadline:
+          type: string
+          format: date-time
+          description: The deadline of the task
+        description:
+          type: string
+          description: The description of the task
+        checkboxes:
+          type: array
+          items:
+            $ref: '#/components/schemas/Checkbox'
+        lessonId:
+          type: string
+          format: uuid
+          description: The ID of the lesson
+
+    Checkbox:
+      type: object
+      properties:
+        _id:
+          type: string
+          format: uuid
+          description: The unique identifier of the checkbox
+        title:
+          type: string
+          description: The title of the checkbox
+        isDone:
+          type: boolean
+          description: Indicates if the checkbox is done
+
+    CreateTaskCardRequest:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+          description: The date of the task card
+        task:
+          $ref: '#/components/schemas/Task'
+      required:
+        - date
+        - task
+        - lessonId
+
+    UpdateTaskRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          description: The updated title of the task
+        subject:
+          type: string
+          description: The updated subject of the task
+        teacher:
+          type: string
+          description: The updated teacher of the task
+        isDone:
+          type: boolean
+          description: Indicates if the task is done
+        deadline:
+          type: string
+          format: date-time
+          description: The updated deadline of the task
+        description:
+          type: string
+          description: The updated description of the task
+        lessonId:
+          type: string
+          format: uuid
+          description: The ID of the lesson
+
+    CreateCheckboxRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          description: The title of the new checkbox
+        isDone:
+          type: boolean
+          description: Indicates if the new checkbox is done
+        lessonId:
+          type: string
+          format: uuid
+          description: The ID of the lesson
+      required:
+        - title
+        - isDone
+        - lessonId
+
+    UpdateCheckboxRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          description: The updated title of the checkbox
+        isDone:
+          type: boolean
+          description: Indicates if the checkbox is done
+      required:
+        - title
+        - isDone

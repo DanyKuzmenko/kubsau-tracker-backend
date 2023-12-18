@@ -2,13 +2,13 @@ import mongoose, { Document, Schema } from 'mongoose';
 import { ITask } from './tasks';
 
 export interface ITaskCard extends Document {
-  date: Date;
+  date: string;
   tasks: ITask[];
 }
 
 const TaskCardSchema = new Schema<ITaskCard>({
-  date: {type: Date, required: true},
-  tasks: [{ type: Schema.Types.ObjectId, ref: 'Task' }]
+  date: {type: String, required: true},
+  tasks: [{ type: Schema.Types.ObjectId, ref: 'Task' }],
 });
 
 TaskCardSchema.pre<ITask>('save', function (next) {

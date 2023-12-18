@@ -1,4 +1,4 @@
-import mongoose, { Document, Schema } from 'mongoose';
+import mongoose, { Document, Schema, Types } from 'mongoose';
 import { ICheckbox } from './common';
 
 export interface ITask extends Document {
@@ -9,6 +9,7 @@ export interface ITask extends Document {
   deadline: Date;
   description: string;
   checkboxes: ICheckbox[]
+  lessonId: Types.ObjectId;
 }
 
 const TaskSchema = new Schema<ITask>({
@@ -18,7 +19,8 @@ const TaskSchema = new Schema<ITask>({
   isDone: {type: Boolean, required: true},
   deadline: {type: Date, required: true},
   description: {type: String, required: true},
-  checkboxes: [{ type: Schema.Types.ObjectId, ref: 'Checkbox' }]
+  checkboxes: [{ type: Schema.Types.ObjectId, ref: 'Checkbox' }],
+  lessonId: { type: Schema.Types.ObjectId, ref: 'Lesson', required: true }
 });
 
 TaskSchema.pre<ITask>('save', function (next) {

@@ -17,5 +17,6 @@ CheckboxSchema.pre<ICheckbox>('save', function (next) {
   next();
 });
 
+const CheckboxModel = mongoose.model<ICheckbox>('Checkbox', CheckboxSchema);
 
-export default mongoose.model<ICheckbox>('Checkbox', CheckboxSchema);
+export default CheckboxModel;
