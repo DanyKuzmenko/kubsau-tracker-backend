@@ -2,10 +2,10 @@ import { NextFunction, Request, Response } from 'express';
 import { createTaskSchema, updateTaskSchema } from '../schemas/task';
 import { handleErrorValidation } from './utils/errorFunctions';
 import TaskCardModel from '../models/taskCard';
-import { createTaskCardSchema } from '../schemas/taskCard';
+import { createTaskCardSchema, deleteTaskCardByDateSchema } from '../schemas/taskCard';
 import { createTask } from './utils/savingTasks';
-import TaskModel from '../models/tasks';
-import mongoose from 'mongoose';
+import TaskModel, { ITask } from '../models/tasks';
+import mongoose, { Types } from 'mongoose';
 import { createCheckboxSchema, id, updateCheckboxSchema } from '../schemas/common';
 import CheckboxModel from '../models/common';
 
@@ -47,7 +47,9 @@ const Controller = {
       await createTaskCardSchema.validate(req.body, { abortEarly: false });
       await createTaskSchema.validate(task, { abortEarly: false });
 
-      let taskCard = await TaskCardModel.findOne({ date }).populate({
+      const localeDate = new Date(date).toLocaleDateString('en')
+
+      let taskCard = await TaskCardModel.findOne({ localeDate }).populate({
         path: 'tasks',
         populate: {
           path: 'checkboxes',
@@ -59,7 +61,7 @@ const Controller = {
         const createdTask = await createTask(task);
 
         const newTaskCard = new TaskCardModel({
-          date: date,
+          date: localeDate,
           tasks: [createdTask]
         });
 
@@ -155,6 +157,76 @@ const Controller = {
 
         res.status(200).json(checkbox);
       }
+    } catch (err: any) {
+      handleErrorValidation(err, next);
+    }
+  },
+
+  deleteTask: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const lessonId = req.params.lessonId;
+      const { date } = req.body;
+
+      await id.validate(lessonId, { abortEarly: false });
+      await deleteTaskCardByDateSchema.validate(date, { abortEarly: false })
+
+      const lessonObjectId = mongoose.Types.ObjectId.createFromHexString(lessonId);
+      const localeDate = new Date(date).toLocaleDateString('en')
+
+      const deletedTask = await TaskModel.findOneAndDelete({ lessonId: lessonObjectId });
+
+      if (!deletedTask) {
+        res.status(404).json({ message: 'Task not found, try another lessonId' });
+        return;
+      }
+
+      const deletedTaskId = (deletedTask as unknown as ITask & {_id: Types.ObjectId})._id;
+
+      const deletedFromTaskCard = await TaskCardModel.updateOne(
+        { date: localeDate },
+        { $pull: { tasks: deletedTaskId } }
+      );
+
+      if (!deletedFromTaskCard) {
+        res.status(404).json({ message: 'Task card not found, try another lessonId' });
+        return;
+      }
+
+      const remainingTasks = await TaskCardModel.findOne({ date: localeDate });
+
+      if (!remainingTasks) {
+        res.status(404).json({ message: 'Task not found, try another date' });
+        return;
+      }
+
+      if (remainingTasks.tasks.length === 0) {
+        const deletedTaskCard = await TaskCardModel.findOneAndDelete({ date: localeDate });
+
+        if (!deletedTaskCard) {
+          res.status(404).json({ message: 'Task card not found, try another lessonId' });
+          return;
+        }
+      }
+
+      res.status(200).json({ message: 'Task deleted successfully', deletedTask });
+    } catch (err: any) {
+      handleErrorValidation(err, next);
+    }
+  },
+
+  deleteCheckbox: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const checkboxId = req.params.checkboxId;
+
+      await id.validate(checkboxId, { abortEarly: false });
+
+      const deletedCheckbox = await CheckboxModel.findByIdAndDelete(checkboxId);
+
+      if (!deletedCheckbox) {
+        res.status(404).json({ message: 'Checkbox not found, try another checkboxId' });
+      }
+
+      res.status(200).json({ message: 'Checkbox deleted successfully', deletedCheckbox });
     } catch (err: any) {
       handleErrorValidation(err, next);
     }
